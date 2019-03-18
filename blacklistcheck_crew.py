@@ -2,13 +2,13 @@
 #
 # Author: Rene Diepstraten <rene@pcextreme.nl>
 # Update: Robert Selaru <robert@pcextreme.nl>
+# Test with ips from  <https://myip.ms/browse/blacklist>
 
 from rblwatch import RBLSearch
 import socket, ipaddress
 import sys
 
 EXCEPTIONS = []
-# TEST with ips from: https://myip.ms/browse/blacklist/
 
 def check_ip(ip):
     listed = []
@@ -42,30 +42,29 @@ def check_input(input):
 
 def usage():
     print('''
-Usage: {} <hostname>
+Usage: {} <hostname>/<ip>
 
-Checks <hostname> for listed RBLs, backscatterer excluded.
+Checks <hostname> or <ip> for listed RBLs.
 '''.format(sys.argv[0].split('/')[-1]))
 
 
 def main():
     try:
-        targets = sys.argv[1:]
+        target = sys.argv[1]
     except IndexError:
         usage()
         sys.exit()
 
     rbls = list()
-    for target in targets:
-        for ip in check_input(target):
-            for rbl in check_ip(ip):
-                rbls.append((ip, rbl))
+    for ip in check_input(target):
+        for rbl in check_ip(ip):
+            rbls.append((ip, rbl))
 
     if rbls:
        for ip, blacklist in rbls:
            print(ip + ' is blacklisted on ' + blacklist)
     else:
-        print(target + ' is not blacklisted')
+        print(str(target) + ' is not blacklisted')
 
 
 if __name__ == '__main__':

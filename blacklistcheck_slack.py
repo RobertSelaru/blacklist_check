@@ -59,7 +59,7 @@ def check_blacklist(ip):
 def send_notification(msg):
     webhook_url = slack_url
 
-    parms = {
+    params = {
         'Content-type': 'application/json',
     }
 
@@ -70,12 +70,14 @@ def send_notification(msg):
     response = requests.post(
         webhook_url, 
         data=json.dumps(slack_data),
-        headers={'Content-Type': 'application/json'}
+        headers=params
     )
 
 
 def main():
-    title = "*Blacklist*  (Robert Selaru) \n"
+    send = False
+
+    title = "*RBL check* `https://gitlab.pcextreme.nl/robert/blacklist-check.git` \n"
         
     targets = check_input_type(arg)
     rbl_data = list()
@@ -86,21 +88,29 @@ def main():
             rbl_data.append((target, rbl))
 
     x = PrettyTable()
-    fielnames = ['Target', 'Blacklist(s)']
+    fielnames = ['IP address', 'Reverse DNS', 'Blacklist(s)']
     x.field_names = fielnames
 
     for target, blacklists in rbl_data:
+        try:
+            rdns = socket.gethostbyaddr(target)[0]
+        except:
+            rdns = None
+        
         rbl = ', '.join(str(x) for x in blacklists)
-        x.add_row([target, rbl])
+        
+        x.add_row([target, rdns, rbl])
+        send = True
 
 
     for fielname in fielnames:
         x.align[fielname] = 'l'
 
-    x = x.get_string()
+    if send:
+        x = x.get_string()
 
-    a = template + '```' + x + '```'
-    send_notification(a)
+        a = title + '```' + x + '```'
+        send_notification(a)
 
 if __name__ == '__main__':
     main()
